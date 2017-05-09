@@ -21,7 +21,7 @@ RUN unzip -q box.options-0.1.zip && \
     sed -i -e 's/\r$//' box.options/bin/start.sh && \
     sed -i -e 's/\r$//' box.options/bin/stop.sh
 
-EXPOSE 8870
+EXPOSE 8888
 
 ENTRYPOINT ["/box.options/bin/start.sh"]
 CMD ["--console"]
