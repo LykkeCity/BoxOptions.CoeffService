@@ -57,7 +57,7 @@ class RabbitMqSubscriber(val host: String, val port: Int, val username: String, 
                                         properties: AMQP.BasicProperties, body: ByteArray) {
                 val message = String(body)
                 val orderBook = Gson().fromJson(message, OrderBook::class.java)
-                if (instruments.contains(orderBook.assetPair)) {
+                if (instruments.contains(orderBook.assetPair) && orderBook.prices.isNotEmpty()) {
                     queue.put(IncomingPrice(orderBook.assetPair, orderBook.timestamp.time, orderBook.isBuy, orderBook.prices.first().price))
                 }
             }
