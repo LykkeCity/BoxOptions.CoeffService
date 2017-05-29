@@ -29,29 +29,31 @@ class GridsHolder (val config: Config, val historyHolder: HistoryHolder, val pri
             val grid = initGrid(it.timeToFirstOption, it.optionLen, it.priceSize, it.nPriceIndex, it.nTimeIndex,
                     it.marginHit, it.marginMiss, it.maxPayoutCoeff, it.bookingFee)
 
-            val history = historyHolder.getPrices(it.name)!!
-            val currentPrice = history[history.size - 1]
-            grid.initiateGrid(activityDistrib, history, it.delta, it.movingWindow, currentPrice)
+            val history = historyHolder.getPrices(it.name)
+            if (history != null) {
+                val currentPrice = history[history.size - 1]
+                grid.initiateGrid(activityDistrib, history, it.delta, it.movingWindow, currentPrice)
 
-            grids[it.name] = grid
+                grids[it.name] = grid
 
-            fixedRateTimer(name = it.name, period = it.period) {
-                val now = Date().time
-                val newPrices = pricesHolder.getPrices(it.name)
+                fixedRateTimer(name = it.name, period = it.period) {
+                    val now = Date().time
+                    val newPrices = pricesHolder.getPrices(it.name)
 
-                val newPrice: Price
-                if (newPrices.isNotEmpty()) {
-                    val lastPrice = newPrices.last()
-                    val bid = lastPrice.bid
-                    val ask = lastPrice.ask
-                    newPrice = Price(now, bid, ask)
-                } else {
-                    val price = historyHolder.getPrices(it.name)!!.last()
-                    newPrice = Price(now, price.bid, price.ask)
-                }
-                grids[it.name]!!.updateCoefficients(newPrices, newPrice)
-                if (newPrices.isNotEmpty()) {
-                    LOGGER.info("[${it.name}] Updated. New prices size: ${newPrices.size}. Current price: $newPrice")
+                    val newPrice: Price
+                    if (newPrices.isNotEmpty()) {
+                        val lastPrice = newPrices.last()
+                        val bid = lastPrice.bid
+                        val ask = lastPrice.ask
+                        newPrice = Price(now, bid, ask)
+                    } else {
+                        val price = historyHolder.getPrices(it.name)!!.last()
+                        newPrice = Price(now, price.bid, price.ask)
+                    }
+                    grids[it.name]!!.updateCoefficients(newPrices, newPrice)
+                    if (newPrices.isNotEmpty()) {
+                        LOGGER.info("[${it.name}] Updated. New prices size: ${newPrices.size}. Current price: $newPrice")
+                    }
                 }
             }
         }
