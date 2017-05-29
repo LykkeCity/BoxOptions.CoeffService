@@ -1,7 +1,5 @@
 package com.lykke.box.options.daos
 
-import com.dukascopy.api.ITick
-import com.dukascopy.api.Instrument
 import java.util.HashMap
 import java.util.LinkedList
 
@@ -24,8 +22,8 @@ class HistoryHolder {
         return historiesMap[instrument]
     }
 
-    fun addAllPrices(instrument: Instrument, ticks: MutableList<ITick>) {
-        val prices = historiesMap.getOrPut(instrument.name) { LinkedList<Price>() }
+    fun addAllPrices(instrument: String, ticks: List<Price>) {
+        val prices = historiesMap.getOrPut(instrument) { LinkedList<Price>() }
         ticks.forEach { tick ->
             prices.add(Price(tick.time, tick.bid, tick.ask))
         }

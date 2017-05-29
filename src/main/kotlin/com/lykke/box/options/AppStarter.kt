@@ -6,7 +6,7 @@ import com.lykke.box.options.algo.PriceProcessor
 import com.lykke.box.options.config.Config
 import com.lykke.box.options.daos.HistoryHolder
 import com.lykke.box.options.daos.PricesHolder
-import com.lykke.box.options.history.HistoryRunner
+import com.lykke.box.options.history.HistoryLoader
 import com.lykke.box.options.http.PostRequestHandler
 import com.lykke.box.options.http.RequestHandler
 import com.lykke.box.options.rabbit.IncomingPrice
@@ -31,14 +31,15 @@ fun main(args: Array<String>) {
     Runtime.getRuntime().addShutdownHook(ShutdownHook())
 
     val config = loadConfig(args[0])
-    val instruments = config.instruments.map { it.jforexName }
+    val instruments = config.instruments.map { it.name }
     val historyHolder = HistoryHolder()
     val pricesHolder = PricesHolder()
     val incomingQueue = LinkedBlockingQueue<IncomingPrice>()
+
+    HistoryLoader().load(instruments, historyHolder)
+
     val priceProcessor = PriceProcessor(incomingQueue, historyHolder, pricesHolder)
     priceProcessor.start()
-
-    HistoryRunner().loadHistory(instruments, historyHolder)
 
     val gridsHolder = GridsHolder(config, historyHolder, pricesHolder)
     RabbitMqSubscriber(config.rabbitMq.host, config.rabbitMq.port, config.rabbitMq.username, config.rabbitMq.password, config.rabbitMq.exchange, incomingQueue, config.instruments.map { it.name }.toSet()).start()
