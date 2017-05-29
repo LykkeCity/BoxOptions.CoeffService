@@ -15,9 +15,9 @@ class HistoryRunner {
     //url of the DEMO jnlp
     private val jnlpUrl = "http://platform.dukascopy.com/demo/jforex.jnlp"
     //user name
-    private val userName = "DEMO2RdtKe"
+    private val userName = "DEMO2RTxea"
     //password
-    private val password = "RdtKe"
+    private val password = "RTxea"
 
 
     fun loadHistory(instruments: List<String>, historyHolder: HistoryHolder) {
