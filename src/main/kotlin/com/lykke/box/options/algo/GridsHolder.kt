@@ -27,7 +27,7 @@ class GridsHolder (val config: Config, val historyHolder: HistoryHolder, val pri
             activities[it.name] = activityDistrib
 
             val grid = initGrid(it.timeToFirstOption, it.optionLen, it.priceSize, it.nPriceIndex, it.nTimeIndex,
-                    it.marginHit, it.marginMiss, it.maxPayoutCoeff, it.bookingFee)
+                    it.marginHit, it.marginMiss, it.maxPayoutCoeff, it.bookingFee, it.hasWeekend)
 
             val history = historyHolder.getPrices(it.name)
             if (history != null) {
@@ -60,8 +60,8 @@ class GridsHolder (val config: Config, val historyHolder: HistoryHolder, val pri
     }
 
     fun initGrid(timeToFirstOption: Long, optionLen: Long, priceSize: Double, nPriceIndex: Int, nTimeIndex: Int,
-                 marginHit: Double, marginMiss: Double, maxPayoutCoeff: Double, bookingFee: Double): OptionsGrid {
-        return OptionsGrid(timeToFirstOption, optionLen, priceSize, nPriceIndex, nTimeIndex, marginHit, marginMiss, maxPayoutCoeff, bookingFee )
+                 marginHit: Double, marginMiss: Double, maxPayoutCoeff: Double, bookingFee: Double, hasWeekend: Boolean): OptionsGrid {
+        return OptionsGrid(timeToFirstOption, optionLen, priceSize, nPriceIndex, nTimeIndex, marginHit, marginMiss, maxPayoutCoeff, bookingFee, hasWeekend)
     }
 
     fun reinitGrid(instrument: String, timeToFirstOption: Long, optionLen: Long, priceSize: Double, nPriceIndex: Int, nTimeIndex: Int) {
@@ -69,7 +69,7 @@ class GridsHolder (val config: Config, val historyHolder: HistoryHolder, val pri
         if (cfg == null) {
             LOGGER.error("Unknown instrument $instrument")
         } else {
-            val grid = initGrid(timeToFirstOption, optionLen, priceSize, nPriceIndex, nTimeIndex, cfg.marginHit, cfg.marginMiss, cfg.maxPayoutCoeff, cfg.bookingFee)
+            val grid = initGrid(timeToFirstOption, optionLen, priceSize, nPriceIndex, nTimeIndex, cfg.marginHit, cfg.marginMiss, cfg.maxPayoutCoeff, cfg.bookingFee, cfg.hasWeekend)
             val activities = activities[instrument]!!
             val history = historyHolder.getPrices(instrument)!!
             val currentPrice = history[history.size - 1]

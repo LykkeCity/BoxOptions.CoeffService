@@ -2,7 +2,6 @@ package com.lykke.box.options.config
 
 data class InstrumentConfig (
     val name: String,
-    val jforexName: String,
     val period: Long,
     val timeToFirstOption: Long,
     val optionLen: Long,
@@ -13,6 +12,7 @@ data class InstrumentConfig (
     val marginMiss: Double,
     val maxPayoutCoeff: Double,
     val bookingFee: Double,
+    val hasWeekend: Boolean,
 
     val delta: Double,
     val activityFileName: String,

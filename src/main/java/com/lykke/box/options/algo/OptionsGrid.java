@@ -1,7 +1,6 @@
 package com.lykke.box.options.algo;
 
 import com.lykke.box.options.daos.Price;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,10 +21,11 @@ public class OptionsGrid {
     double bookingFee;
     public BoxOption[][] optionsGrid;
     VolatilityEstimator[] volatilityEstimators;
+    boolean hasWeekend;
 
 
 
-    OptionsGrid(long timeToFirstOption, long optionLen, double priceSize, int nPriceIndexes, int nTimeIndexes,  double marginHit, double marginMiss, double maxPayoutCoeff, double bookingFee){
+    OptionsGrid(long timeToFirstOption, long optionLen, double priceSize, int nPriceIndexes, int nTimeIndexes,  double marginHit, double marginMiss, double maxPayoutCoeff, double bookingFee, boolean hasWeekend){
 
         this.timeToFirstOption = timeToFirstOption;
         this.optionLen = optionLen;
@@ -36,6 +36,7 @@ public class OptionsGrid {
         this.marginMiss = marginMiss;
         this.maxPayoutCoeff = maxPayoutCoeff;
         this.bookingFee = bookingFee;
+        this.hasWeekend = hasWeekend;
         optionsGrid = new BoxOption[nTimeIndexes][nPriceIndexes];
         volatilityEstimators = new VolatilityEstimator[nTimeIndexes];
 
@@ -49,7 +50,7 @@ public class OptionsGrid {
         for (int i = 0; i < nTimeIndexes; i++){
             long optStartsInMs = timeToFirstOption + i * optionLen;
             long optEndsInMs = optStartsInMs + optionLen;
-            volatilityEstimators[i] = new VolatilityEstimator(activityDistribution, historicPrices, delta, movingWindow, (MS_PER_YEAR / (double) movingWindow));
+            volatilityEstimators[i] = new VolatilityEstimator(activityDistribution, historicPrices, delta, movingWindow, (MS_PER_YEAR / (double) movingWindow), hasWeekend);
             volatilityEstimators[i].run(new ArrayList<>(), price, optEndsInMs);
             for (int j = 0; j < nPriceIndexes; j++){
                 optionsGrid[i][j] = new BoxOption(optStartsInMs, optEndsInMs, minRelatUpperStrike + j * priceSize, minRelatBottomStrike + j * priceSize);
@@ -72,6 +73,27 @@ public class OptionsGrid {
         }
     }
 
+
+
+    public String getHeadString(){
+        String header = "Time;Mid;";
+        for (int timeStep = 0; timeStep < nTimeIndexes; timeStep++){
+            for (int priceStep = 0; priceStep < nPriceIndexes; priceStep++){
+                header += Math.round(optionsGrid[timeStep][priceStep].relatBotStrike * 10000) / 10000.0 + "_" + Math.round(optionsGrid[timeStep][priceStep].relatUpStrike * 10000) / 10000.0 + "_" + optionsGrid[timeStep][priceStep].startsInMS + "_" + optionsGrid[timeStep][priceStep].startsInMS + optionsGrid[timeStep][priceStep].lenInMS + ";";
+            }
+        }
+        return header;
+    }
+
+    public String getPayoutsString(long time, double mid){
+        String payouts = time + ";" + mid + ";";
+        for (int timeStep = 0; timeStep < nTimeIndexes; timeStep++){
+            for (int priceStep = 0; priceStep < nPriceIndexes; priceStep++){
+                payouts += Math.round(optionsGrid[timeStep][priceStep].getHitCoeff() * 1000) / 1000.0 + ";";
+            }
+        }
+        return payouts;
+    }
 
 
 }

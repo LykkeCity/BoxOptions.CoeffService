@@ -1,7 +1,6 @@
 package com.lykke.box.options.algo;
 
 import com.lykke.box.options.daos.Price;
-
 import java.util.LinkedList;
 
 public class Runner {
@@ -16,12 +15,16 @@ public class Runner {
     public LinkedList<Double> osLengths;
     public double avSqrtVar;
     public double osL;
+    private LinkedList<IE> ieLinkedList;
+    private long movingWindow;
 
 
-    Runner(double deltaUp, double deltaDown, int type){
+    Runner(double deltaUp, double deltaDown, int type, long movingWindow){
         this.type = type; this.deltaUp = deltaUp; this.deltaDown = deltaDown; initalized = false; numberDC = 0;
         timesDC = new LinkedList<>();
         osLengths = new LinkedList<>();
+        ieLinkedList = new LinkedList<>();
+        this.movingWindow = movingWindow;
     }
 
 
@@ -41,6 +44,9 @@ public class Runner {
                 extreme = aPrice.getBid();
                 prevDC = aPrice.getBid();
             }
+            double sqrtVar = computeSqrtVar(osL, deltaUp);
+            IE ie = new IE(type, aPrice.getTime(), prevDC, osL, sqrtVar);
+            ieLinkedList.add(ie);
             return type;
         } else {
 
@@ -57,6 +63,10 @@ public class Runner {
                     extreme = aPrice.getBid();
                     type = 1;
                     numberDC += 1;
+                    double sqrtVar = computeSqrtVar(osL, deltaDown);
+                    IE ie = new IE(type, aPrice.getTime(), aPrice.getBid(), osL, sqrtVar);
+                    ieLinkedList.add(ie);
+                    removeOldIEsIfAny(aPrice.getTime());
                     return 1;
                 }
 
@@ -74,6 +84,10 @@ public class Runner {
                     extreme = aPrice.getAsk();
                     type = -1;
                     numberDC += 1;
+                    double sqrtVar = computeSqrtVar(osL, deltaUp);
+                    IE ie = new IE(type, aPrice.getTime(), aPrice.getAsk(), osL, sqrtVar);
+                    ieLinkedList.add(ie);
+                    removeOldIEsIfAny(aPrice.getTime());
                     return -1;
                 }
             }
@@ -83,18 +97,45 @@ public class Runner {
     }
 
 
-    public double computeSqrtVar(){
-        avSqrtVar = 0.0;
-        if (numberDC == 0){
-            return avSqrtVar;
-        } else {
-            for (double osL : osLengths){
-                avSqrtVar +=  Math.pow(osL - deltaUp, 2);
-            }
-            return avSqrtVar;
+    /**
+     * Computes squared variability of one overshoot
+     * @param osL is the size of an overshoot
+     * @param delta is the size of the relevant threshold
+     * @return squared variability of the overshoot
+     */
+    private double computeSqrtVar(double osL, double delta){
+        return Math.pow(osL - delta, 2);
+    }
+
+    /**
+     * This part is needed to have IEs with correct prices after weekends.
+     * @param time
+     */
+    public void addTimeToIEs(long time){
+        for (IE ie : ieLinkedList){
+            ie.setTime(ie.getTime() + time);
         }
     }
 
+    /**
+     * The methods compute summ of all squared variabilities of overshoots in the ieLinkedList
+     * @return
+     */
+    public double computeTotalSqrtVar(){
+        double totalSqrtVar = 0;
+        for (IE ie : ieLinkedList){
+            totalSqrtVar += ie.getSqrtOsDeviation();
+        }
+        return totalSqrtVar;
+    }
 
-
+    /**
+     * The method should remove old IEs from the list
+     * @param currentTime is really the current time
+     */
+    private void removeOldIEsIfAny(long currentTime){
+        while (ieLinkedList.size() != 0 && currentTime - ieLinkedList.getFirst().getTime() > movingWindow){
+            ieLinkedList.removeFirst();
+        }
+    }
 }

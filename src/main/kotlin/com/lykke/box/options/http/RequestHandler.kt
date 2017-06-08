@@ -25,11 +25,19 @@ class RequestHandler (val gridsHolder: GridsHolder) : HttpHandler {
 
             val grid = gridsHolder.getGrid(instrument)!!
 
-            val response = GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").create().toJson(grid.optionsGrid)
-            exchange.sendResponseHeaders(200, response.length.toLong())
-            val os = exchange.responseBody
-            os.write(response.toByteArray())
-            os.close()
+            try {
+                val response = GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").create().toJson(grid.optionsGrid)
+                exchange.sendResponseHeaders(200, response.length.toLong())
+                val os = exchange.responseBody
+                os.write(response.toByteArray())
+                os.close()
+            } catch (e: Exception) {
+                val response = "Error: ${e.message}"
+                exchange.sendResponseHeaders(500, response.length.toLong())
+                val os = exchange.responseBody
+                os.write(response.toByteArray())
+                os.close()
+            }
             LOGGER.info("Order book snapshot sent to ${exchange.remoteAddress}")
         } catch (e: Exception) {
             LOGGER.error("Unable to write order book snapshot request to ${exchange.remoteAddress}", e)
