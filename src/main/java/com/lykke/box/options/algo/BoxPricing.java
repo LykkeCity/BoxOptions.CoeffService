@@ -136,24 +136,26 @@ class BoxPricing {
     }
 
 
-    double[] getCoefficients(double r, double volatility){
+    double[] getCoefficients(double r, double annualVolatility){
         double[] coefficients = new double[2];
-        if (volatility < 0.005){
+        if (annualVolatility < 0.005){
             coefficients[0] = 1.0;
             coefficients[1] = 1.0;
             return coefficients;
         } else {
-            double probToHit = prob(r, volatility);
+            double probToHit = prob(r, annualVolatility);
             double cHit = (marginHit) / (0.5 - marginHit);
             double cMiss = (marginMiss) / (0.5 - marginMiss);
             double payoutCoefHit = (1 + cHit * probToHit) / ((1 + cHit) * probToHit);
             double payoutCoefMiss = (1 + cMiss * (1 - probToHit)) / ((1 + cMiss) * (1 -probToHit));
 
-            coefficients[0] = Math.min(payoutCoefHit - bookingFee, maxPayoutCoeff);
-            coefficients[1] = Math.min(payoutCoefMiss - bookingFee, maxPayoutCoeff);
+            payoutCoefHit = Math.min(payoutCoefHit - bookingFee, maxPayoutCoeff);
+            payoutCoefMiss = Math.min(payoutCoefMiss - bookingFee, maxPayoutCoeff);
+
+            coefficients[0] = Math.max(payoutCoefHit, 1.0);
+            coefficients[1] = Math.max(payoutCoefMiss, 1.0);
 
             return coefficients;
         }
     }
-
 }
