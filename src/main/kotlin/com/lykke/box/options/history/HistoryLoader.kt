@@ -59,7 +59,9 @@ class HistoryLoader {
                     val gson = GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE).create()
                     val itemsListType = object : TypeToken<List<Price>>() {}.type
                     val ticks: List<Price> = gson.fromJson(response.toString(), itemsListType)
-                    historyHolder.addAllPrices(it, ticks)
+                    if (ticks.isNotEmpty()) {
+                        historyHolder.addAllPrices(it, ticks)
+                    }
                     LOGGER.info("[$it] Loaded ${ticks.size} quotes")
                 }
             } catch (e: Exception) {
