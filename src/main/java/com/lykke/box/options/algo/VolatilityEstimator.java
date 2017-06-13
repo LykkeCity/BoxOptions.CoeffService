@@ -4,6 +4,7 @@ import com.lykke.box.options.daos.Price;
 import java.util.List;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
+import org.joda.time.DateTimeZone;
 
 
 public class VolatilityEstimator {
@@ -22,6 +23,7 @@ public class VolatilityEstimator {
     public boolean initialized;
     public long timeWeekendStarts, timeWeekendEnds;
     public boolean hasWeekend;
+    public boolean addedWeekend; // shows whether we've already added a weekend to the list of IE or not
 
     VolatilityEstimator(List<Double> activityDistribution, List<Price> historicPrices, double delta, long movingWindow, double periodsPerYear, boolean hasWeekend){
         runner = new Runner(delta, delta, -1, movingWindow);
@@ -34,10 +36,13 @@ public class VolatilityEstimator {
         initialized = false;
         if (hasWeekend){
             timeWeekendStarts = 421200000L;
-            timeWeekendEnds = 587400000L;
+            timeWeekendEnds = 586800000L;
         } else {
             timeWeekendStarts = timeWeekendEnds = -1L;
         }
+        addedWeekend = false;
+        DateTimeZone.setDefault(DateTimeZone.UTC); // it is an important field: without this the algorithm will
+        // interpret time like my local time. https://stackoverflow.com/questions/9397715/defaulting-date-time-zone-to-utc-for-jodatimes-datetime
 
     }
 
@@ -63,6 +68,7 @@ public class VolatilityEstimator {
         return sumActivity / (double) (lastBar - firstBar + 1); // finds average activity till the end of the box
     }
 
+
     private long msFromMonday(long currentTime){
         DateTime dateTime = new DateTime(currentTime);
         DateTime mondayThisWeek = dateTime.withDayOfWeek(DateTimeConstants.MONDAY); // thus we get date of a Monday
@@ -70,44 +76,49 @@ public class VolatilityEstimator {
         return currentTime - mondayThisWeek.getMillis();
     }
 
+    private void initialize(List<Price> historicalPrices){
+        Price previousPrice = historicalPrices.get(0);
+        long weekendLength = timeWeekendEnds - timeWeekendStarts;
+        for (Price currentPrice : historicalPrices){
+            if (currentPrice.getTime() - previousPrice.getTime() > weekendLength / 2){ // to catch a weekend gap. At least half, to be sure.
+                runner.addTimeToIEs(timeWeekendEnds - timeWeekendStarts);
+            }
+            runner.run(currentPrice);
+            previousPrice = currentPrice.clonePrice();
+        }
+    }
+
+
     public double run(List<Price> newPrices, Price currentPrice, long optEndsInMs){
         if (!initialized){
             initialized = true;
-            double annualVolat = computeAnnualVolat(historicPrices);
-            double coeff = computeAverageFutureActivity(currentPrice, optEndsInMs);
-            volat = annualVolat * coeff;
-            prevVolat = volat;
+            initialize(historicPrices); // just initializes all runners and finds historical IEs
+            prevVolat = volat = 0.0; // this part prevents wrong payouts on weekends
             return volat;
 
         } else {
-            for (Price aPrice : newPrices){
-                runner.run(aPrice);
-            }
-            if (checkIfNowIsWeekend(timeWeekendStarts, timeWeekendEnds, currentPrice.getTime())){
-                runner.addTimeToIEs(timeWeekendEnds - timeWeekendStarts);
+            if (Tools.checkIfNowIsWeekend(timeWeekendStarts, timeWeekendEnds, currentPrice.getTime())){
+                if (!addedWeekend){
+                    runner.addTimeToIEs(timeWeekendEnds - timeWeekendStarts);
+                    addedWeekend = true;
+                }
                 prevVolat = volat;
                 volat = 0.0;
             } else {
+                for (Price aPrice : newPrices){
+                    runner.run(aPrice);
+                }
                 double updatedSqrtVar = runner.computeTotalSqrtVar();
                 double annualVolat = Math.sqrt((updatedSqrtVar * periodsPerYear));
                 double coeff = computeAverageFutureActivity(currentPrice, optEndsInMs);
                 prevVolat = volat;
                 volat = annualVolat * coeff;
+                addedWeekend = false;
             }
             return volat;
         }
     }
 
-    private boolean checkIfNowIsWeekend(long timeWeekendStarts, long timeWeekendEnds, long currentTime){
-        DateTime dateTime = new DateTime(currentTime);
-        DateTime mondayThisWeek = dateTime.withDayOfWeek(DateTimeConstants.MONDAY); // thus we get date of a Monday
-        mondayThisWeek = mondayThisWeek.withTimeAtStartOfDay(); // to come to the very beginning of the Monday
-        long currentTimeFromMonday = currentTime - mondayThisWeek.getMillis();
-        boolean nowIsWeekend = false;
-        if (currentTimeFromMonday >= timeWeekendStarts && currentTimeFromMonday <= timeWeekendEnds){
-            nowIsWeekend = true;
-        }
-        return nowIsWeekend;
-    }
+
 
 }
