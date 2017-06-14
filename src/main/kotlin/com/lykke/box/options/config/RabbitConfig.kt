@@ -5,5 +5,8 @@ data class RabbitConfig(
     val port: Int,
     val username: String,
     val password: String,
-    val exchange: String
+    val exchange: String,
+    val queue: String,
+    val type: String,
+    val instruments: Set<String>
 )

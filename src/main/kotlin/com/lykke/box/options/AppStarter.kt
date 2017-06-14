@@ -11,6 +11,9 @@ import com.lykke.box.options.http.PostRequestHandler
 import com.lykke.box.options.http.RequestHandler
 import com.lykke.box.options.rabbit.IncomingPrice
 import com.lykke.box.options.rabbit.RabbitMqSubscriber
+import com.lykke.box.options.rabbit.parser.BestBidAskParser
+import com.lykke.box.options.rabbit.parser.OrderBookParser
+import com.lykke.box.options.rabbit.parser.ParserType
 import com.sun.net.httpserver.HttpServer
 import org.apache.log4j.Logger
 import java.io.File
@@ -42,7 +45,17 @@ fun main(args: Array<String>) {
     priceProcessor.start()
 
     val gridsHolder = GridsHolder(config, historyHolder, pricesHolder)
-    RabbitMqSubscriber(config.rabbitMq.host, config.rabbitMq.port, config.rabbitMq.username, config.rabbitMq.password, config.rabbitMq.exchange, incomingQueue, config.instruments.map { it.name }.toSet()).start()
+
+    config.rabbitMq.forEach { cfg ->
+
+        val parser = when (ParserType.valueOf(cfg.type)) {
+            ParserType.OrderBook -> OrderBookParser()
+            ParserType.BestBidAsk -> BestBidAskParser()
+        }
+
+        RabbitMqSubscriber(cfg.host, cfg.port, cfg.username, cfg.password, cfg.exchange, cfg.queue, parser, incomingQueue, cfg.instruments).start()
+    }
+
     LOGGER.info(historyHolder.toString())
 
     val server = HttpServer.create(InetSocketAddress(config.httpPort), 0)

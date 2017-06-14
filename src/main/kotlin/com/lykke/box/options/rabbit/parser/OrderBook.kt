@@ -1,4 +1,4 @@
-package com.lykke.box.options.rabbit
+package com.lykke.box.options.rabbit.parser
 
 import java.util.ArrayList
 import java.util.Date
