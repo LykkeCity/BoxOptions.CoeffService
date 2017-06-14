@@ -23,8 +23,8 @@ class HistoryLoader {
     private val PAIR_HOLDER = "{PAIR_HOLDER}"
 
 
-    private val historyUrl = "http://boxoptions-api.lykke.com:5000/api/history/BidHistory?dtFrom=$FROM_HOLDER&dtTo=$TO_HOLDER&assetPair=$PAIR_HOLDER"
-//    private val historyUrl = "http://13.93.116.252:5050/api/history/BidHistory?dtFrom=$FROM_HOLDER&dtTo=$TO_HOLDER&assetPair=$PAIR_HOLDER"
+//    private val historyUrl = "http://boxoptions-api.lykke.com:5000/api/history/BidHistory?dtFrom=$FROM_HOLDER&dtTo=$TO_HOLDER&assetPair=$PAIR_HOLDER"
+    private val historyUrl = "http://13.93.116.252:5050/api/history/BidHistory?dtFrom=$FROM_HOLDER&dtTo=$TO_HOLDER&assetPair=$PAIR_HOLDER"
 //    private val historyUrl = "http://nnemesis.myvnc.com:5000/api/history/bidHistory?dtFrom=$FROM_HOLDER&dtTo=$TO_HOLDER&assetPair=$PAIR_HOLDER"
     private val DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     //2017-05-20
