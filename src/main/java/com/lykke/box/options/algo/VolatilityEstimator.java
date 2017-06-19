@@ -109,8 +109,7 @@ public class VolatilityEstimator {
                     runner.run(aPrice);
                 }
                 double updatedSqrtVar = runner.computeTotalSqrtVar();
-//                double annualVolat = Math.sqrt((updatedSqrtVar * periodsPerYear));
-                double annualVolat = 0.25;
+                double annualVolat = Math.sqrt((updatedSqrtVar * periodsPerYear));
                 double coeff = computeAverageFutureActivity(currentPrice, optEndsInMs);
                 prevVolat = volat;
                 volat = annualVolat * coeff;
