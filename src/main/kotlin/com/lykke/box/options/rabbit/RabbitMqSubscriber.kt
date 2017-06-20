@@ -8,6 +8,7 @@ import com.rabbitmq.client.ConnectionFactory
 import com.rabbitmq.client.DefaultConsumer
 import com.rabbitmq.client.Envelope
 import org.apache.log4j.Logger
+import java.util.UUID
 import java.util.concurrent.BlockingQueue
 
 
@@ -28,6 +29,7 @@ class RabbitMqSubscriber(
 
     var connection: Connection? = null
     var channel: Channel? = null
+    val customQueueName = "${queueName}_${UUID.randomUUID()}"
 
     fun connect(): Boolean {
         LOGGER.info("Connecting to RabbitMQ: $host:$port, exchange: $exchangeName")
@@ -42,14 +44,14 @@ class RabbitMqSubscriber(
             this.connection = factory.newConnection()
             this.channel = connection!!.createChannel()
             channel!!.exchangeDeclarePassive(exchangeName)
-            channel!!.queueDeclare(queueName, false, false, false, null)
-            channel!!.queueBind(queueName, exchangeName, "")
+            channel!!.queueDeclare(customQueueName, false, false, false, null)
+            channel!!.queueBind(customQueueName, exchangeName, "")
 
-            LOGGER.info("Connected to RabbitMQ: $host:$port, exchange: $exchangeName, queue: $queueName. Instruments: $instruments")
+            LOGGER.info("Connected to RabbitMQ: $host:$port, exchange: $exchangeName, queue: $customQueueName. Instruments: $instruments")
 
             return true
         } catch (e: Exception) {
-            LOGGER.error("Unable to connect to RabbitMQ: $host:$port, exchange: $exchangeName, queue: $queueName: ${e.message}", e)
+            LOGGER.error("Unable to connect to RabbitMQ: $host:$port, exchange: $exchangeName, queue: $customQueueName: ${e.message}", e)
             return false
         }
     }
@@ -69,6 +71,6 @@ class RabbitMqSubscriber(
                 }
             }
         }
-        channel!!.basicConsume(queueName, true, consumer)
+        channel!!.basicConsume(customQueueName, true, consumer)
     }
 }
