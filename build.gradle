@@ -19,7 +19,7 @@ apply plugin: 'application'
 repositories {
     mavenCentral()
     maven {
-
+		url "https://www.dukascopy.com/client/jforexlib/publicrepo"
     }
 }
 
