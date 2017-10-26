@@ -29,7 +29,7 @@ class RabbitMqSubscriber(
 
     var connection: Connection? = null
     var channel: Channel? = null
-    val customQueueName = "${queueName}_${UUID.randomUUID()}"
+    val customQueueName = "${queueName}"
 
     fun connect(): Boolean {
         LOGGER.info("Connecting to RabbitMQ: $host:$port, exchange: $exchangeName")
