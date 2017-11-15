@@ -1,0 +1,9 @@
+
+version: "2"
+services:
+  box.options:
+    image: orangedev1/boxoptions:latest
+    ports:
+      - "8800:8888"
+    volumes:
+          - /home/Lykkex/box.options/box:/box.options/log
